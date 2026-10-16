@@ -1,4 +1,6 @@
-package com.example.ejemplo1.ui.theme
+package com.example.myapplication.ui
+
+
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -11,10 +13,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.ejemplo1.R
+import com.example.myapplication.R
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
