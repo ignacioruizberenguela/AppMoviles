@@ -1,9 +1,9 @@
-package com.example.myapplication.ui.Screens
-
-
+package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,50 +12,42 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignupScreen(
-    onSignupSuccess: () -> Unit,
-    onBackToLogin: () -> Unit
+fun LoginScreen(
+    onLoginSuccess: (String) -> Unit,   // recibe route
+    onGoToSignup: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var rut by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Población Zaror - Registro") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
+    // Roles de prueba (mientras no hay backend)
+    val rolesDemo = listOf("Vecino", "Secretaría", "Tesorería", "Directiva", "Admin")
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Crear Cuenta Nueva",
+                text = "Iniciar Sesión",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Registro para vecinos y directiva",
+                text = "Junta de Vecinos Población Zaror",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo de Mail
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -67,7 +59,6 @@ fun SignupScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de Contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -78,50 +69,62 @@ fun SignupScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Campo de RUT (específico del wireframe de signup)
-            OutlinedTextField(
-                value = rut,
-                onValueChange = { rut = it },
-                label = { Text("RUT") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            // error msg
+            if (error.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = error, color = MaterialTheme.colorScheme.error)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de Registro
             Button(
-                onClick = { onSignupSuccess() },
+                onClick = {
+                    if (email.isBlank() || password.isBlank()) {
+                        error = "Ingresa tu mail y contraseña"
+                    } else {
+                        error = ""
+                        onLoginSuccess("Vecino")
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(text = "REGISTRARSE")
+                Text("LOGIN")
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Botón para volver al Login si ya tiene cuenta
-            TextButton(
-                onClick = { onBackToLogin() }
-            ) {
-                Text(text = "¿Ya tienes una cuenta? Inicia sesión")
+            TextButton(onClick = { onGoToSignup() }) {
+                Text("¿No tienes cuenta? Regístrate")
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // TODO backend, esto es mientras no hay backend. solo UI
+            Text(
+                text = "Modo demo: entrar como…",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            rolesDemo.forEach { rol ->
+                OutlinedButton(
+                    onClick = { onLoginSuccess(rol) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(rol)
+                }
+            }
         }
-
     }
 
-}
+
 @Preview(showBackground = true)
 @Composable
-fun RegistroPreview() {
+fun LoginPreview() {
     MyApplicationTheme {
-        SignupScreen(
-            onSignupSuccess = {},
-            onBackToLogin = {}
-        )
+        LoginScreen(onLoginSuccess = {}, onGoToSignup = {})
     }
 }

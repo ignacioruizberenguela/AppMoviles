@@ -1,10 +1,9 @@
-package com.example.myapplication.ui.Screens
+package com.example.myapplication.ui.screens
 
 
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
@@ -13,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -22,27 +20,15 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @Composable
 fun VecinoFormularioScreen(
     onSubmitSuccess: () -> Unit,
-    onBack: () -> Unit
 ) {
     var fecha by remember { mutableStateOf("") }
     var horario by remember { mutableStateOf("") }
     var motivo by remember { mutableStateOf("") }
     var comprobanteAdjunto by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Formulario de Arriendo - Zaror") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -140,14 +126,13 @@ fun VecinoFormularioScreen(
             }
         }
     }
-}
+
 @Preview(showBackground = true)
 @Composable
 fun VecinoFormularioPreview() {
     MyApplicationTheme {
         VecinoFormularioScreen(
-            onSubmitSuccess = {},
-            onBack = {}
+            onSubmitSuccess = {}
         )
     }
 }

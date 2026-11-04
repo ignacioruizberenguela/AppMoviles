@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.Screens
+package com.example.myapplication.ui.screens
 
 
 
@@ -14,20 +14,10 @@ import androidx.compose.ui.unit.dp
 fun TesoreriaScreen(
     onNavigate: (String) -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Panel de Tesorería - Población Zaror") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -85,4 +75,4 @@ fun TesoreriaScreen(
             }
         }
     }
-}
+

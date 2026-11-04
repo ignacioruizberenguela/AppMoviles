@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.Screens
+package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +26,6 @@ data class SolicitudArriendo(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirectivaSecretariaScreen(
-    onBack: () -> Unit
 ) {
     // Lista de ejemplo basada en los 2 a 3 arriendos mensuales del caso
     val solicitudes = listOf(
@@ -34,20 +33,9 @@ fun DirectivaSecretariaScreen(
         SolicitudArriendo("2", "Carlos Soto", "22/11/2026", "10:00 - 14:00 hrs", "Reunión de comité", "Pendiente")
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Solicitudes de Arriendo - Secretaría") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(16.dp)
         ) {
             Text(
@@ -119,13 +107,12 @@ fun DirectivaSecretariaScreen(
             }
         }
     }
-}
+
 @Preview(showBackground = true)
 @Composable
 fun DirectivaSecretariaPreview() {
     MyApplicationTheme {
         DirectivaSecretariaScreen(
-            onBack = {}
         )
     }
 }
