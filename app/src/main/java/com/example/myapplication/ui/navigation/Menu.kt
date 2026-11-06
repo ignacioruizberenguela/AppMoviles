@@ -1,28 +1,29 @@
 package com.example.myapplication.ui.navigation
 
+import com.example.myapplication.model.Rol
 // menu lateral
 data class ItemMenu(val titulo: String, val ruta: String)
 
 // lista opciones segun rol
-fun menuPorRol(rol: String): List<ItemMenu> {
+fun menuPorRol(rol: Rol?): List<ItemMenu> {
     return when (rol) {
-        "Vecino" -> listOf(
+        Rol.VECINO -> listOf(
             ItemMenu("Solicitar arriendo", Screen.VecinoFormulario.route)
         )
-        "Secretaría" -> listOf(
+        Rol.SECRETARIA -> listOf(
             ItemMenu("Solicitudes de arriendo", Screen.DirectivaSecretaria.route)
         )
-        "Tesorería" -> listOf(
+        Rol.TESORERIA -> listOf(
             ItemMenu("Panel de Tesorería", Screen.Tesoreria.route),
             ItemMenu("Ingresos", Screen.TesoreriaIngresos.route),
             ItemMenu("Egresos", Screen.TesoreriaEgresos.route),
             ItemMenu("Informes", Screen.TesoreriaInformes.route)
         )
-        "Directiva" -> listOf(
+        Rol.DIRECTIVA -> listOf(
             ItemMenu("Panel de Directiva", Screen.Directiva.route),
             ItemMenu("Informes", Screen.TesoreriaInformes.route)
         )
-        "Admin" -> listOf(
+        Rol.ADMIN -> listOf(
             ItemMenu("Administración", Screen.Admin.route),
             ItemMenu("Solicitudes de arriendo", Screen.DirectivaSecretaria.route),
             ItemMenu("Panel de Tesorería", Screen.Tesoreria.route)

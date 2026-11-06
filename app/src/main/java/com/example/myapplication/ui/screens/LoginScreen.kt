@@ -12,13 +12,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.model.Rol
 
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,   // recibe route
+    onLoginSuccess: (Rol) -> Unit,
     onGoToSignup: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -26,8 +27,7 @@ fun LoginScreen(
     var error by remember { mutableStateOf("") }
 
     // Roles de prueba (mientras no hay backend)
-    val rolesDemo = listOf("Vecino", "Secretaría", "Tesorería", "Directiva", "Admin")
-
+    val rolesDemo = Rol.entries
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -83,7 +83,7 @@ fun LoginScreen(
                         error = "Ingresa tu mail y contraseña"
                     } else {
                         error = ""
-                        onLoginSuccess("Vecino")
+                        onLoginSuccess(Rol.VECINO)
                     }
                 },
                 modifier = Modifier
@@ -114,7 +114,7 @@ fun LoginScreen(
                     onClick = { onLoginSuccess(rol) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(rol)
+                    Text(rol.nombre)
                 }
             }
         }

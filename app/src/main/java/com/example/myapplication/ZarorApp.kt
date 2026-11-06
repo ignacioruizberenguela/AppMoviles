@@ -19,6 +19,8 @@ import com.example.myapplication.ui.navigation.menuPorRol
 import com.example.myapplication.ui.screens.*
 import kotlinx.coroutines.launch
 
+import com.example.myapplication.model.Rol
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZarorApp() {
@@ -27,7 +29,7 @@ fun ZarorApp() {
     val scope = rememberCoroutineScope()
 
     // Rol del usuario logueado ("" = nadie)
-    var rol by remember { mutableStateOf("") }
+    var rol by remember { mutableStateOf<Rol?>(null) }
 
     // Ruta actual (como usePathname en Next). Se actualiza sola al navegar.
     val entradaActual by navController.currentBackStackEntryAsState()
@@ -42,7 +44,7 @@ fun ZarorApp() {
     val puedeVolver = navController.previousBackStackEntry != null
 
     fun cerrarSesion() {
-        rol = ""
+        rol = null
         navController.navigate(Screen.Login.route) {
             popUpTo(navController.graph.id) { inclusive = true }  // borra el historial
         }
@@ -55,7 +57,7 @@ fun ZarorApp() {
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Menú · $rol",
+                    text = "Menú · ${rol?.nombre ?: ""}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -126,7 +128,7 @@ fun ZarorApp() {
                 composable(Screen.Signup.route) {
                     SignupScreen(
                         onSignupSuccess = {
-                            rol = "Vecino"
+                            rol= Rol.VECINO
                             navController.navigate(Screen.VecinoFormulario.route) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
