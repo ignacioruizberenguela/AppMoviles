@@ -28,7 +28,8 @@ fun LoginScreen(
 
     // Roles de prueba (mientras no hay backend)
     val rolesDemo = Rol.entries
-        Column(
+
+    Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
