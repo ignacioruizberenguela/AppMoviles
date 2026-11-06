@@ -12,16 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.model.Reserva
+import com.example.myapplication.model.Horario
 
-// Modelo de datos simulado para las solicitudes de arriendo
-data class SolicitudArriendo(
-    val id: String,
-    val vecino: String,
-    val fecha: String,
-    val horario: String,
-    val motivo: String,
-    val estado: String
-)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,8 +23,8 @@ fun DirectivaSecretariaScreen(
 ) {
     // Lista de ejemplo basada en los 2 a 3 arriendos mensuales del caso
     val solicitudes = listOf(
-        SolicitudArriendo("1", "María González", "15/11/2026", "15:00 - 20:00 hrs", "Cumpleaños familiar", "Pendiente"),
-        SolicitudArriendo("2", "Carlos Soto", "22/11/2026", "10:00 - 14:00 hrs", "Reunión de comité", "Pendiente")
+        Reserva(1, 10, "María González", "15/11/2026", Horario.TARDE, "Cumpleaños familiar"),
+        Reserva(2, 11, "Carlos Soto", "22/11/2026", Horario.MANANA, "Reunión de comité")
     )
 
         Column(
@@ -70,7 +64,7 @@ fun DirectivaSecretariaScreen(
                                 .padding(16.dp)
                         ) {
                             Text(
-                                text = "Solicitante: ${solicitud.vecino}",
+                                text = "Solicitante: ${solicitud.vecinoNombre}",
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Spacer(modifier = Modifier.height(4.dp))
