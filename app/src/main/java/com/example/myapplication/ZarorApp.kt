@@ -16,10 +16,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.ui.navigation.Screen
 import com.example.myapplication.ui.navigation.menuPorRol
-import com.example.myapplication.ui.screens.*
+import com.example.myapplication.ui.View.*
 import kotlinx.coroutines.launch
 
 import com.example.myapplication.model.Rol
+import com.example.myapplication.ui.Screens.AdminScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +32,7 @@ fun ZarorApp() {
     // Rol del usuario logueado ("" = nadie)
     var rol by remember { mutableStateOf<Rol?>(null) }
 
-    // Ruta actual (como usePathname en Next). Se actualiza sola al navegar.
+    // Ruta actual. Se actualiza sola al navegar.
     val entradaActual by navController.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
 
@@ -107,7 +108,7 @@ fun ZarorApp() {
             }
         ) { innerPadding ->
 
-            // ---------- {children} ----------
+            // ---------- NAVHOST / RUTAS ----------
             NavHost(
                 navController = navController,
                 startDestination = Screen.Login.route,
@@ -128,7 +129,7 @@ fun ZarorApp() {
                 composable(Screen.Signup.route) {
                     SignupScreen(
                         onSignupSuccess = {
-                            rol= Rol.VECINO
+                            rol = Rol.VECINO
                             navController.navigate(Screen.VecinoFormulario.route) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
@@ -151,7 +152,24 @@ fun ZarorApp() {
                 composable(Screen.TesoreriaEgresos.route) { PlaceholderScreen("Egresos") }
                 composable(Screen.TesoreriaInformes.route) { PlaceholderScreen("Informes") }
                 composable(Screen.Directiva.route) { PlaceholderScreen("Panel de Directiva") }
-                composable(Screen.Admin.route) { PlaceholderScreen("Administración") }
+
+                // ---------- PANTALLA DE ADMINISTRADOR INTEGRADA ----------
+                composable(Screen.Admin.route) {
+                    AdminScreen(
+                        onNavigateToTesoreria = {
+                            navController.navigate(Screen.Tesoreria.route)
+                        },
+                        onNavigateToSecretaria = {
+                            navController.navigate(Screen.DirectivaSecretaria.route)
+                        },
+                        onNavigateToFormularioVecino = {
+                            navController.navigate(Screen.VecinoFormulario.route)
+                        },
+                        onLogout = {
+                            cerrarSesion()
+                        }
+                    )
+                }
             }
         }
     }
