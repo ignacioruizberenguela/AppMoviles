@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.myapplication.model.Movimiento
 import com.example.myapplication.model.TipoMovimiento
-import com.example.myapplication.model.Categoria // Asegúrate de importar tu modelo Categoria
+import com.example.myapplication.model.Categoria 
 
 class TesoreriaViewModel : ViewModel() {
 
@@ -44,11 +44,11 @@ class TesoreriaViewModel : ViewModel() {
                 tipo = tipo,
                 categoria = categoria,
                 monto = montoDouble,
-                fecha = "2026-06-06", // Puedes cambiarlo por la fecha actual formateada
+                fecha = "2026-06-06",
                 descripcion = descripcionInput
             )
 
-            movimientos.add(0, nuevoMovimiento) // Agrega al principio de la lista
+            movimientos.add(0, nuevoMovimiento) 
 
             // Limpiar campos
             descripcionInput = ""
