@@ -13,13 +13,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.viewmodel.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(
+    authViewModel: AuthViewModel,
     onSignupSuccess: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
+    var nombre by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
@@ -43,6 +48,17 @@ fun SignupScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            // nombre
+            OutlinedTextField(
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("NOMBRE") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Campo de Mail
             OutlinedTextField(
@@ -80,6 +96,12 @@ fun SignupScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // mensaje error
+            if (error.isNotEmpty()) {
+                Text(text = error, color = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             // Botón de Registro
             Button(
                 onClick = { onSignupSuccess() },
@@ -94,7 +116,10 @@ fun SignupScreen(
 
             // Botón para volver al Login si ya tiene cuenta
             TextButton(
-                onClick = { onBackToLogin() }
+                onClick = {
+                    val resultado = authViewModel.registrar(nombre, rut, email, password)
+                    if (resultado == null) onSignupSuccess() else error = resultado
+                },
             ) {
                 Text(text = "¿Ya tienes una cuenta? Inicia sesión")
             }
@@ -107,9 +132,6 @@ fun SignupScreen(
 @Composable
 fun RegistroPreview() {
     MyApplicationTheme {
-        SignupScreen(
-            onSignupSuccess = {},
-            onBackToLogin = {}
-        )
+        SignupScreen(authViewModel = viewModel(), onSignupSuccess = {}, onBackToLogin = {})
     }
 }

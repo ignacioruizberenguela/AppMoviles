@@ -1,138 +1,157 @@
 package com.example.myapplication.ui.screens
 
-
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.myapplication.ui.theme.MyApplicationTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.model.Horario
+import com.example.myapplication.model.Usuario
+import com.example.myapplication.ui.viewmodel.ReservaViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VecinoFormularioScreen(
+    usuario: Usuario?,
     onSubmitSuccess: () -> Unit,
+    viewModel: ReservaViewModel = viewModel()
 ) {
     var fecha by remember { mutableStateOf("") }
-    var horario by remember { mutableStateOf("") }
+    var horario by remember { mutableStateOf(Horario.TARDE) }
     var motivo by remember { mutableStateOf("") }
-    var comprobanteAdjunto by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+    var mostrarCalendario by remember { mutableStateOf(false) }
+    val estadoCalendario = rememberDatePickerState()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Solicitud de Dependencias",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Sede: Los Jazmines 425, Cerrillos",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Solicitud de Dependencias",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = "Sede: Los Jazmines 425, Cerrillos",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        usuario?.let {
+            Text(text = "Solicitante: ${it.nombre}", style = MaterialTheme.typography.bodyMedium)
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-            // Fecha del Arriendo
-            OutlinedTextField(
-                value = fecha,
-                onValueChange = { fecha = it },
-                label = { Text("Fecha de Arriendo (DD/MM/AAAA)") },
-                singleLine = true,
-                trailingIcon = {
-                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Calendario")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Horario
-            OutlinedTextField(
-                value = horario,
-                onValueChange = { horario = it },
-                label = { Text("Horario (Ej: 15:00 - 20:00 hrs)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Motivo del Evento
-            OutlinedTextField(
-                value = motivo,
-                onValueChange = { motivo = it },
-                label = { Text("Motivo / Actividad (Cumpleaños, Reunión, etc.)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 4
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Sección para adjuntar comprobante usando la cámara (Recurso nativo sugerido)
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Respaldo de Pago / Comprobante",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            // Aquí simularíamos la llamada a la cámara del dispositivo
-                            comprobanteAdjunto = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Icon(imageVector = Icons.Default.CameraAlt, contentDescription = "Cámara")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = if (comprobanteAdjunto) "¡Comprobante Adjuntado!" else "Tomar Foto con Cámara")
-                    }
+        // ---------- Fecha (se elige con el calendario) ----------
+        OutlinedTextField(
+            value = fecha,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Fecha de arriendo") },
+            placeholder = { Text("Toca el calendario →") },
+            trailingIcon = {
+                IconButton(onClick = { mostrarCalendario = true }) {
+                    Icon(Icons.Default.DateRange, contentDescription = "Elegir fecha")
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-            Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón de Enviar Solicitud
-            Button(
-                onClick = { onSubmitSuccess() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(text = "ENVIAR SOLICITUD")
+        // ---------- Horario (bloques fijos) ----------
+        Text(
+            text = "Horario",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Horario.entries.forEach { opcion ->
+                val ocupado = fecha.isNotBlank() && viewModel.estaOcupado(fecha, opcion)
+                FilterChip(
+                    selected = horario == opcion,
+                    onClick = { horario = opcion },
+                    enabled = !ocupado,
+                    label = { Text(if (ocupado) "${opcion.texto} (ocupado)" else opcion.texto) }
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = motivo,
+            onValueChange = { motivo = it },
+            label = { Text("Motivo / Actividad (Cumpleaños, Reunión, etc.)") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            maxLines = 4
+        )
+
+        if (error.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = error, color = MaterialTheme.colorScheme.error)
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        Button(
+            onClick = {
+                if (usuario == null) {
+                    error = "Debes iniciar sesión"
+                } else {
+                    val resultado = viewModel.enviarSolicitud(usuario, fecha, horario, motivo)
+                    if (resultado == null) onSubmitSuccess() else error = resultado
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text(text = "ENVIAR SOLICITUD")
         }
     }
 
-@Preview(showBackground = true)
-@Composable
-fun VecinoFormularioPreview() {
-    MyApplicationTheme {
-        VecinoFormularioScreen(
-            onSubmitSuccess = {}
-        )
+    // ---------- Calendario (aparece al tocar el ícono) ----------
+    if (mostrarCalendario) {
+        DatePickerDialog(
+            onDismissRequest = { mostrarCalendario = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    estadoCalendario.selectedDateMillis?.let { fecha = millisAFecha(it) }
+                    mostrarCalendario = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarCalendario = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = estadoCalendario)
+        }
     }
+}
+
+// El calendario entrega milisegundos en UTC → lo pasamos a "yyyy-MM-dd"
+private fun millisAFecha(millis: Long): String {
+    val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    formato.timeZone = TimeZone.getTimeZone("UTC")
+    return formato.format(Date(millis))
 }

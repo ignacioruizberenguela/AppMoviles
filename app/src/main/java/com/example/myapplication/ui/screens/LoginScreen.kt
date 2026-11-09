@@ -12,13 +12,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.model.Rol
 
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
+    authViewModel: AuthViewModel,
     onLoginSuccess: (Rol) -> Unit,
     onGoToSignup: () -> Unit
 ) {
@@ -80,11 +83,12 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    if (email.isBlank() || password.isBlank()) {
-                        error = "Ingresa tu mail y contraseña"
-                    } else {
+                    val resultado = authViewModel.login(email, password)
+                    if (resultado == null) {
                         error = ""
-                        onLoginSuccess(Rol.VECINO)
+                        authViewModel.usuarioActual?.let { onLoginSuccess(it.rol) }
+                    } else {
+                        error = resultado
                     }
                 },
                 modifier = Modifier
@@ -102,7 +106,7 @@ fun LoginScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
 
-            // TODO backend, esto es mientras no hay backend. solo UI
+            // despues backend, esto es mientras no hay backend. solo UI
             Text(
                 text = "Modo demo: entrar como…",
                 style = MaterialTheme.typography.titleSmall,
@@ -112,7 +116,10 @@ fun LoginScreen(
 
             rolesDemo.forEach { rol ->
                 OutlinedButton(
-                    onClick = { onLoginSuccess(rol) },
+                    onClick = {
+                        authViewModel.entrarComoDemo(rol)
+                        onLoginSuccess(rol)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(rol.nombre)
@@ -126,6 +133,6 @@ fun LoginScreen(
 @Composable
 fun LoginPreview() {
     MyApplicationTheme {
-        LoginScreen(onLoginSuccess = {}, onGoToSignup = {})
+        LoginScreen(authViewModel = viewModel(), onLoginSuccess = {}, onGoToSignup = {})
     }
 }

@@ -9,6 +9,8 @@ data class Usuario(
     val nombre: String,
     val rut: String,
     val email: String,
-    val rol: Rol
+    val rol: Rol,
+    val password: String = ""
 ) {
 }
+

@@ -20,9 +20,10 @@ import com.example.myapplication.ui.navigation.menuPorRol
 
 import kotlinx.coroutines.launch
 
-import com.example.myapplication.model.Rol
+import com.example.myapplication.ui.viewmodel.AuthViewModel
 import com.example.myapplication.ui.screens.* // no borrar, así se improtan todas las screens.
 import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +32,13 @@ fun ZarorApp() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Instancia compartida del ViewModel de Tesorería para sincronizar ingresos, egresos e informes
+    // ViewModels compartidos por toda la app
     val tesoreriaViewModel: TesoreriaViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
-    // Rol del usuario logueado (null = nadie)
-    var rol by remember { mutableStateOf<Rol?>(null) }
+    // Usuario con sesión iniciada y su rol (null = nadie)
+    val usuario = authViewModel.usuarioActual
+    val rol = usuario?.rol
 
     // Ruta actual. Se actualiza sola al navegar.
     val entradaActual by navController.currentBackStackEntryAsState()
@@ -50,7 +53,7 @@ fun ZarorApp() {
     val puedeVolver = navController.previousBackStackEntry != null
 
     fun cerrarSesion() {
-        rol = null
+        authViewModel.cerrarSesion()
         navController.navigate(Screen.Login.route) {
             popUpTo(navController.graph.id) { inclusive = true }  // borra el historial
         }
@@ -122,8 +125,8 @@ fun ZarorApp() {
                 // 1. Login
                 composable(Screen.Login.route) {
                     LoginScreen(
+                        authViewModel = authViewModel,
                         onLoginSuccess = { rolElegido ->
-                            rol = rolElegido
                             val inicio = menuPorRol(rolElegido).first().ruta
                             navController.navigate(inicio) {
                                 popUpTo(Screen.Login.route) { inclusive = true }
@@ -136,8 +139,8 @@ fun ZarorApp() {
                 // 2. Registro
                 composable(Screen.Signup.route) {
                     SignupScreen(
+                        authViewModel = authViewModel,
                         onSignupSuccess = {
-                            rol = Rol.VECINO
                             navController.navigate(Screen.VecinoFormulario.route) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
@@ -146,11 +149,17 @@ fun ZarorApp() {
                     )
                 }
 
-                // 3. Formulario de Vecino
+                // 3. Vecino: formulario y mis reservas
                 composable(Screen.VecinoFormulario.route) {
                     VecinoFormularioScreen(
-                        onSubmitSuccess = { /* TODO: mostrar confirmación */ }
+                        usuario = usuario,
+                        onSubmitSuccess = {
+                            navController.navigate(Screen.MisReservas.route) { launchSingleTop = true }
+                        }
                     )
+                }
+                composable(Screen.MisReservas.route) {
+                    MisReservasScreen(usuario = usuario)
                 }
 
                 // 4. Secretaría y Directiva

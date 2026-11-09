@@ -8,7 +8,9 @@ data class ItemMenu(val titulo: String, val ruta: String)
 fun menuPorRol(rol: Rol?): List<ItemMenu> {
     return when (rol) {
         Rol.VECINO -> listOf(
-            ItemMenu("Solicitar arriendo", Screen.VecinoFormulario.route)
+            ItemMenu("Solicitar arriendo", Screen.VecinoFormulario.route),
+            ItemMenu("Mis Reservas", Screen.MisReservas.route)
+
         )
         Rol.SECRETARIA -> listOf(
             ItemMenu("Solicitudes de arriendo", Screen.DirectivaSecretaria.route)

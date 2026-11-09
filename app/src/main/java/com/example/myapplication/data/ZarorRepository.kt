@@ -12,11 +12,12 @@ object ZarorRepository {
 
     // ---------- Datos de prueba (ficticios) ----------
     val usuarios = mutableStateListOf(
-        Usuario(1, "Admin Zaror", "11.111.111-1", "admin@zaror.cl", Rol.ADMIN),
-        Usuario(2, "María González", "12.222.222-2", "maria@correo.cl", Rol.VECINO),
-        Usuario(3, "Carlos Soto", "13.333.333-3", "carlos@correo.cl", Rol.VECINO),
-        Usuario(4, "Ana Rojas", "14.444.444-4", "tesoreria@zaror.cl", Rol.TESORERIA),
-        Usuario(5, "Pedro Muñoz", "15.555.555-5", "secretaria@zaror.cl", Rol.SECRETARIA)
+        Usuario(1, "Admin Zaror", "11.111.111-1", "admin@zaror.cl", Rol.ADMIN, "1234"),
+        Usuario(2, "María González", "12.222.222-2", "maria@correo.cl", Rol.VECINO, "1234"),
+        Usuario(3, "Carlos Soto", "13.333.333-3", "carlos@correo.cl", Rol.VECINO, "1234"),
+        Usuario(4, "Ana Rojas", "14.444.444-4", "tesoreria@zaror.cl", Rol.TESORERIA, "1234"),
+        Usuario(5, "Pedro Muñoz", "15.555.555-5", "secretaria@zaror.cl", Rol.SECRETARIA, "1234"),
+        Usuario(6, "Rosa Díaz", "16.666.666-6", "directiva@zaror.cl", Rol.DIRECTIVA, "1234")
     )
 
     val reservas = mutableStateListOf(

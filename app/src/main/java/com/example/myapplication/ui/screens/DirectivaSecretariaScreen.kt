@@ -4,93 +4,95 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.model.EstadoReserva
+import com.example.myapplication.ui.components.EstadoBadge
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import com.example.myapplication.model.Reserva
-import com.example.myapplication.model.Horario
+import com.example.myapplication.ui.viewmodel.ReservaViewModel
 
-
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DirectivaSecretariaScreen(
-) {
-    // Lista de ejemplo basada en los 2 a 3 arriendos mensuales del caso
-    val solicitudes = listOf(
-        Reserva(1, 10, "María González", "15/11/2026", Horario.TARDE, "Cumpleaños familiar"),
-        Reserva(2, 11, "Carlos Soto", "22/11/2026", Horario.MANANA, "Reunión de comité")
-    )
+fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
+    var soloPendientes by remember { mutableStateOf(true) }
+    val lista = if (soloPendientes) viewModel.pendientes else viewModel.reservas
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Revisiones Pendientes",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Verifica la disponibilidad y aprueba o rechaza las solicitudes.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = soloPendientes,
+                onClick = { soloPendientes = true },
+                label = { Text("Pendientes (${viewModel.pendientes.size})") }
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Verifica disponibilidad de fechas y horarios de arriendo de la sede.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            FilterChip(
+                selected = !soloPendientes,
+                onClick = { soloPendientes = false },
+                label = { Text("Todas") }
             )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        if (lista.isEmpty()) {
+            Text("No hay solicitudes", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
 
-            // Lista dinámica de solicitudes
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(solicitudes) { solicitud ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(lista, key = { it.id }) { solicitud ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Solicitante: ${solicitud.vecinoNombre}",
-                                style = MaterialTheme.typography.titleMedium
+                                text = solicitud.vecinoNombre,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Fecha: ${solicitud.fecha} (${solicitud.horario})")
-                            Text(text = "Motivo: ${solicitud.motivo}")
-                            Text(text = "Estado: ${solicitud.estado}", color = MaterialTheme.colorScheme.secondary)
+                            EstadoBadge(solicitud.estado)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Fecha: ${solicitud.fecha} (${solicitud.horario.texto})")
+                        Text(text = "Motivo: ${solicitud.motivo}")
 
+                        // Solo las pendientes se pueden aprobar o rechazar
+                        if (solicitud.estado == EstadoReserva.PENDIENTE) {
                             Spacer(modifier = Modifier.height(12.dp))
-
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 OutlinedButton(
-                                    onClick = { /* Lógica para rechazar */ },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                    onClick = { viewModel.rechazar(solicitud) },
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
                                 ) {
-                                    Icon(imageVector = Icons.Default.Cancel, contentDescription = "Rechazar")
+                                    Icon(Icons.Default.Cancel, contentDescription = null)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("Rechazar")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Button(
-                                    onClick = { /* Lógica para aprobar */ }
-                                ) {
-                                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Aprobar")
+                                Button(onClick = { viewModel.aprobar(solicitud) }) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("Aprobar")
                                 }
@@ -101,12 +103,12 @@ fun DirectivaSecretariaScreen(
             }
         }
     }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun DirectivaSecretariaPreview() {
     MyApplicationTheme {
-        DirectivaSecretariaScreen(
-        )
+        DirectivaSecretariaScreen()
     }
 }

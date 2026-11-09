@@ -13,3 +13,9 @@ val Pink40 = Color(0xFF7D5260)
 // Colores para movimientos
 val VerdeIngreso = Color(0xFF2E7D32)
 val RojoEgreso = Color(0xFFC62828)
+
+// ---------- Estados de reserva ----------
+val EstadoPendiente = Color(0xFFB26A00)   // ámbar
+val EstadoAprobada = Color(0xFF1565C0)    // azul
+val EstadoPagada = VerdeIngreso           // verde (mismo que los ingresos)
+val EstadoRechazada = RojoEgreso          // rojo (mismo que los egresos)
