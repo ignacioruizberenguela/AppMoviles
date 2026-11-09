@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -17,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.ui.navigation.Screen
 import com.example.myapplication.ui.navigation.menuPorRol
 import com.example.myapplication.ui.View.*
+import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
 import kotlinx.coroutines.launch
 
 import com.example.myapplication.model.Rol
@@ -29,7 +31,10 @@ fun ZarorApp() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Rol del usuario logueado ("" = nadie)
+    // Instancia compartida del ViewModel de Tesorería para sincronizar ingresos, egresos e informes
+    val tesoreriaViewModel: TesoreriaViewModel = viewModel()
+
+    // Rol del usuario logueado (null = nadie)
     var rol by remember { mutableStateOf<Rol?>(null) }
 
     // Ruta actual. Se actualiza sola al navegar.
@@ -40,7 +45,7 @@ fun ZarorApp() {
     // El título del header sale del menú; si no está, uno genérico
     val titulo = menu.find { it.ruta == rutaActual }?.titulo ?: "Población Zaror"
 
-    // En Login y Registro no mostramos header
+    // En Login y Registro no mostramos header ni menú lateral
     val mostrarHeader = rutaActual != Screen.Login.route && rutaActual != Screen.Signup.route
     val puedeVolver = navController.previousBackStackEntry != null
 
@@ -114,6 +119,7 @@ fun ZarorApp() {
                 startDestination = Screen.Login.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
+                // 1. Login
                 composable(Screen.Login.route) {
                     LoginScreen(
                         onLoginSuccess = { rolElegido ->
@@ -126,6 +132,8 @@ fun ZarorApp() {
                         onGoToSignup = { navController.navigate(Screen.Signup.route) }
                     )
                 }
+
+                // 2. Registro
                 composable(Screen.Signup.route) {
                     SignupScreen(
                         onSignupSuccess = {
@@ -137,23 +145,36 @@ fun ZarorApp() {
                         onBackToLogin = { navController.popBackStack() }
                     )
                 }
+
+                // 3. Formulario de Vecino
                 composable(Screen.VecinoFormulario.route) {
                     VecinoFormularioScreen(
                         onSubmitSuccess = { /* TODO: mostrar confirmación */ }
                     )
                 }
+
+                // 4. Secretaría y Directiva
                 composable(Screen.DirectivaSecretaria.route) {
                     DirectivaSecretariaScreen()
                 }
+
+                // 5. Tesorería Principal y sus Submódulos conectados al ViewModel
                 composable(Screen.Tesoreria.route) {
                     TesoreriaScreen(onNavigate = { ruta -> navController.navigate(ruta) })
                 }
-                composable(Screen.TesoreriaIngresos.route) { PlaceholderScreen("Ingresos") }
-                composable(Screen.TesoreriaEgresos.route) { PlaceholderScreen("Egresos") }
-                composable(Screen.TesoreriaInformes.route) { PlaceholderScreen("Informes") }
+                composable(Screen.TesoreriaIngresos.route) {
+                    TesoreriaIngresosScreen(viewModel = tesoreriaViewModel)
+                }
+                composable(Screen.TesoreriaEgresos.route) {
+                    TesoreriaEgresosScreen(viewModel = tesoreriaViewModel)
+                }
+                composable(Screen.TesoreriaInformes.route) {
+                    TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
+                }
+
                 composable(Screen.Directiva.route) { PlaceholderScreen("Panel de Directiva") }
 
-                // ---------- PANTALLA DE ADMINISTRADOR INTEGRADA ----------
+                // 6. Panel de Administrador
                 composable(Screen.Admin.route) {
                     AdminScreen(
                         onNavigateToTesoreria = {
