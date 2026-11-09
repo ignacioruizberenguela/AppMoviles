@@ -51,7 +51,7 @@ fun TesoreriaScreen(
                     }
                     // Botón Informes
                     Button(
-                        onClick = { onNavigate("tesoreria_informes") },
+                        onClick = { onNavigate(Screen.TesoreriaInformes.route) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(55.dp)

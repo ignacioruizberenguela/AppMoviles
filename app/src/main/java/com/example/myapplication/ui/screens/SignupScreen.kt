@@ -104,7 +104,10 @@ fun SignupScreen(
 
             // Botón de Registro
             Button(
-                onClick = { onSignupSuccess() },
+                onClick = {
+                    val resultado = authViewModel.registrar(nombre, rut, email, password)
+                    if (resultado == null) onSignupSuccess() else error = resultado
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -114,13 +117,8 @@ fun SignupScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botón para volver al Login si ya tiene cuenta
-            TextButton(
-                onClick = {
-                    val resultado = authViewModel.registrar(nombre, rut, email, password)
-                    if (resultado == null) onSignupSuccess() else error = resultado
-                },
-            ) {
+            // Volver al Login si ya tiene cuenta
+            TextButton(onClick = { onBackToLogin() }) {
                 Text(text = "¿Ya tienes una cuenta? Inicia sesión")
             }
 

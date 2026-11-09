@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
+import com.example.myapplication.ui.viewmodel.formatoPesos
 
 @Composable
 fun TesoreriaInformesScreen(viewModel: TesoreriaViewModel) {
@@ -22,8 +23,8 @@ fun TesoreriaInformesScreen(viewModel: TesoreriaViewModel) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "Resumen General", style = MaterialTheme.typography.titleMedium)
-                Text(text = "Total Ingresos: $ ${viewModel.totalIngresos}", color = MaterialTheme.colorScheme.primary)
-                Text(text = "Total Egresos: $ ${viewModel.totalEgresos}", color = MaterialTheme.colorScheme.error)
+                Text(text = "Total Ingresos: $ ${formatoPesos(viewModel.totalIngresos)}", color = MaterialTheme.colorScheme.primary)
+                Text(text = "Total Egresos: $ ${formatoPesos(viewModel.totalEgresos)}", color = MaterialTheme.colorScheme.error)
                 HorizontalDivider()
                 Text(
                     text = "Saldo Líquido Actual: $ ${viewModel.saldoTotal}",
