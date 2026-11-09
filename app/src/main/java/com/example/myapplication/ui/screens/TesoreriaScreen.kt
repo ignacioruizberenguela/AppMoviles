@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,28 +40,15 @@ fun TesoreriaScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Botón Ingresos
                     Button(
-                        onClick = { onNavigate("tesoreria_ingresos") },
+                        onClick = { onNavigate(Screen.TesoreriaMovimientos.route) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(55.dp)
                             .padding(vertical = 8.dp)
                     ) {
-                        Text("INGRESOS", style = MaterialTheme.typography.titleMedium)
+                        Text("MOVIMIENTOS", style = MaterialTheme.typography.titleMedium)
                     }
-
-                    // Botón Egresos
-                    Button(
-                        onClick = { onNavigate("tesoreria_egresos") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp)
-                            .padding(vertical = 8.dp)
-                    ) {
-                        Text("EGRESOS", style = MaterialTheme.typography.titleMedium)
-                    }
-
                     // Botón Informes
                     Button(
                         onClick = { onNavigate("tesoreria_informes") },

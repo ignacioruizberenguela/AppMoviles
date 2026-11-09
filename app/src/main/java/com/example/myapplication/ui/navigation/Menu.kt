@@ -15,12 +15,12 @@ fun menuPorRol(rol: Rol?): List<ItemMenu> {
         )
         Rol.TESORERIA -> listOf(
             ItemMenu("Panel de Tesorería", Screen.Tesoreria.route),
-            ItemMenu("Ingresos", Screen.TesoreriaIngresos.route),
-            ItemMenu("Egresos", Screen.TesoreriaEgresos.route),
+            ItemMenu("Movimientos", Screen.TesoreriaMovimientos.route),
             ItemMenu("Informes", Screen.TesoreriaInformes.route)
         )
         Rol.DIRECTIVA -> listOf(
             ItemMenu("Panel de Directiva", Screen.Directiva.route),
+            ItemMenu("Movimientos", Screen.TesoreriaMovimientos.route),
             ItemMenu("Informes", Screen.TesoreriaInformes.route)
         )
         Rol.ADMIN -> listOf(

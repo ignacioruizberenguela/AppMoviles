@@ -17,12 +17,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.ui.navigation.Screen
 import com.example.myapplication.ui.navigation.menuPorRol
-import com.example.myapplication.ui.View.*
-import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
+
 import kotlinx.coroutines.launch
 
 import com.example.myapplication.model.Rol
-import com.example.myapplication.ui.Screens.AdminScreen
+import com.example.myapplication.ui.screens.* // no borrar, así se improtan todas las screens.
+import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,11 +162,8 @@ fun ZarorApp() {
                 composable(Screen.Tesoreria.route) {
                     TesoreriaScreen(onNavigate = { ruta -> navController.navigate(ruta) })
                 }
-                composable(Screen.TesoreriaIngresos.route) {
-                    TesoreriaIngresosScreen(viewModel = tesoreriaViewModel)
-                }
-                composable(Screen.TesoreriaEgresos.route) {
-                    TesoreriaEgresosScreen(viewModel = tesoreriaViewModel)
+                composable(Screen.TesoreriaMovimientos.route) {
+                    MovimientosScreen(viewModel = tesoreriaViewModel)
                 }
                 composable(Screen.TesoreriaInformes.route) {
                     TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
@@ -176,21 +173,9 @@ fun ZarorApp() {
 
                 // 6. Panel de Administrador
                 composable(Screen.Admin.route) {
-                    AdminScreen(
-                        onNavigateToTesoreria = {
-                            navController.navigate(Screen.Tesoreria.route)
-                        },
-                        onNavigateToSecretaria = {
-                            navController.navigate(Screen.DirectivaSecretaria.route)
-                        },
-                        onNavigateToFormularioVecino = {
-                            navController.navigate(Screen.VecinoFormulario.route)
-                        },
-                        onLogout = {
-                            cerrarSesion()
-                        }
-                    )
+                    AdminScreen()
                 }
+
             }
         }
     }
