@@ -42,7 +42,7 @@ class AuthViewModel : ViewModel() {
             return "Ya existe una cuenta con ese RUT"
         }
 
-        // Todo el que se registra entra como VECINO; el Admin cambia roles después
+        // despues: el que se registra entra como VECINO; el Admin cambia roles después
         repo.guardarUsuario(
             Usuario(
                 nombre = nombre.trim(),
