@@ -7,26 +7,35 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.myapplication.model.Movimiento
 import com.example.myapplication.model.TipoMovimiento
-import com.example.myapplication.model.Categoria 
+import com.example.myapplication.model.Categoria
 
 class TesoreriaViewModel : ViewModel() {
 
-    // Inputs para la interfaz
     var descripcionInput by mutableStateOf("")
         private set
 
     var montoInput by mutableStateOf("")
         private set
 
-    // Lista reactiva basada en tu entidad Movimiento
-    var movimientos = mutableStateListOf<Movimiento>()
-        private set
+    // Lista general de movimientos
+    val movimientos = mutableStateListOf<Movimiento>()
 
-    // Saldo total calculado automáticamente
+    // Listas filtradas automáticas
+    val ingresos: List<Movimiento>
+        get() = movimientos.filter { it.tipo == TipoMovimiento.INGRESO }
+
+    val egresos: List<Movimiento>
+        get() = movimientos.filter { it.tipo == TipoMovimiento.EGRESO }
+
+    // Totales para informes
+    val totalIngresos: Double
+        get() = ingresos.sumOf { it.monto }
+
+    val totalEgresos: Double
+        get() = egresos.sumOf { it.monto }
+
     val saldoTotal: Double
-        get() = movimientos.sumOf {
-            if (it.tipo == TipoMovimiento.INGRESO) it.monto else -it.monto
-        }
+        get() = totalIngresos - totalEgresos
 
     fun onDescripcionChange(newValue: String) {
         descripcionInput = newValue
@@ -36,7 +45,6 @@ class TesoreriaViewModel : ViewModel() {
         montoInput = newValue
     }
 
-    // Registrar un nuevo movimiento (Ingreso o Egreso)
     fun agregarMovimiento(tipo: TipoMovimiento, categoria: Categoria) {
         val montoDouble = montoInput.toDoubleOrNull()
         if (descripcionInput.isNotBlank() && montoDouble != null && montoDouble > 0.0) {
@@ -44,13 +52,10 @@ class TesoreriaViewModel : ViewModel() {
                 tipo = tipo,
                 categoria = categoria,
                 monto = montoDouble,
-                fecha = "2026-06-06",
+                fecha = "2026-06-06", // Fecha simulada o actual
                 descripcion = descripcionInput
             )
-
-            movimientos.add(0, nuevoMovimiento) 
-
-            // Limpiar campos
+            movimientos.add(0, nuevoMovimiento)
             descripcionInput = ""
             montoInput = ""
         }
