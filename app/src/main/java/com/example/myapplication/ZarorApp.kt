@@ -1,5 +1,9 @@
 package com.example.myapplication
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.data.ZarorRepository
+import com.example.myapplication.ui.components.LocalMensajes
 import com.example.myapplication.ui.navigation.Screen
 import com.example.myapplication.ui.navigation.menuPorRol
 import com.example.myapplication.ui.screens.* // no borrar, así se importan todas las screens
@@ -39,6 +44,16 @@ fun ZarorApp() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // Snackbar único para toda la app
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    fun avisar(mensaje: String) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()   // reemplaza el mensaje anterior
+            snackbarHostState.showSnackbar(mensaje)
+        }
+    }
 
     // ViewModels compartidos por toda la app
     val tesoreriaViewModel: TesoreriaViewModel = viewModel()
@@ -70,6 +85,7 @@ fun ZarorApp() {
         navController.navigate(Screen.Login.route) {
             popUpTo(navController.graph.id) { inclusive = true }  // borra el historial
         }
+        avisar("Sesión cerrada")
     }
 
     // ---------- MENÚ LATERAL ----------
@@ -100,6 +116,7 @@ fun ZarorApp() {
     ) {
         // ---------- HEADER + CONTENIDO ----------
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 if (mostrarHeader) {
                     TopAppBar(
@@ -129,78 +146,91 @@ fun ZarorApp() {
             }
         ) { innerPadding ->
 
-            // ---------- NAVHOST / RUTAS ----------
-            NavHost(
-                navController = navController,
-                startDestination = pantallaInicial,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                // 1. Login
-                composable(Screen.Login.route) {
-                    LoginScreen(
-                        authViewModel = authViewModel,
-                        onLoginSuccess = { rolElegido ->
-                            val inicio = menuPorRol(rolElegido).first().ruta
-                            navController.navigate(inicio) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+            // Todas las pantallas de adentro pueden usar avisar(...)
+            CompositionLocalProvider(LocalMensajes provides { mensaje -> avisar(mensaje) }) {
+
+                // ---------- NAVHOST / RUTAS ----------
+                NavHost(
+                    navController = navController,
+                    startDestination = pantallaInicial,
+                    modifier = Modifier.padding(innerPadding),
+                    // Al entrar a una pantalla: se desliza desde la derecha y aparece
+                    enterTransition = { slideInHorizontally(tween(300)) { it / 3 } + fadeIn(tween(300)) },
+                    exitTransition = { fadeOut(tween(200)) },
+                    // Al volver atrás: se desliza desde la izquierda
+                    popEnterTransition = { slideInHorizontally(tween(300)) { -it / 3 } + fadeIn(tween(300)) },
+                    popExitTransition = { fadeOut(tween(200)) }
+                ) {
+                    // 1. Login
+                    composable(Screen.Login.route) {
+                        LoginScreen(
+                            authViewModel = authViewModel,
+                            onLoginSuccess = { rolElegido ->
+                                val inicio = menuPorRol(rolElegido).first().ruta
+                                navController.navigate(inicio) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
+                                avisar("Hola, ${authViewModel.usuarioActual?.nombre ?: ""} 👋")
+                            },
+                            onGoToSignup = { navController.navigate(Screen.Signup.route) }
+                        )
+                    }
+
+                    // 2. Registro
+                    composable(Screen.Signup.route) {
+                        SignupScreen(
+                            authViewModel = authViewModel,
+                            onSignupSuccess = {
+                                navController.navigate(Screen.VecinoFormulario.route) {
+                                    popUpTo(navController.graph.id) { inclusive = true }
+                                }
+                                avisar("¡Cuenta creada! Bienvenida/o")
+                            },
+                            onBackToLogin = { navController.popBackStack() }
+                        )
+                    }
+
+                    // 3. Vecino: formulario y mis reservas
+                    composable(Screen.VecinoFormulario.route) {
+                        VecinoFormularioScreen(
+                            usuario = usuario,
+                            onSubmitSuccess = {
+                                navController.navigate(Screen.MisReservas.route) { launchSingleTop = true }
+                                avisar("Solicitud enviada ✔")
                             }
-                        },
-                        onGoToSignup = { navController.navigate(Screen.Signup.route) }
-                    )
-                }
+                        )
+                    }
+                    composable(Screen.MisReservas.route) {
+                        MisReservasScreen(usuario = usuario)
+                    }
 
-                // 2. Registro
-                composable(Screen.Signup.route) {
-                    SignupScreen(
-                        authViewModel = authViewModel,
-                        onSignupSuccess = {
-                            navController.navigate(Screen.VecinoFormulario.route) {
-                                popUpTo(navController.graph.id) { inclusive = true }
-                            }
-                        },
-                        onBackToLogin = { navController.popBackStack() }
-                    )
-                }
+                    // 4. Secretaría
+                    composable(Screen.DirectivaSecretaria.route) {
+                        DirectivaSecretariaScreen()
+                    }
 
-                // 3. Vecino: formulario y mis reservas
-                composable(Screen.VecinoFormulario.route) {
-                    VecinoFormularioScreen(
-                        usuario = usuario,
-                        onSubmitSuccess = {
-                            navController.navigate(Screen.MisReservas.route) { launchSingleTop = true }
-                        }
-                    )
-                }
-                composable(Screen.MisReservas.route) {
-                    MisReservasScreen(usuario = usuario)
-                }
+                    // 5. Tesorería y sus submódulos (comparten el mismo ViewModel)
+                    composable(Screen.Tesoreria.route) {
+                        TesoreriaScreen(onNavigate = { ruta -> navController.navigate(ruta) })
+                    }
+                    composable(Screen.TesoreriaMovimientos.route) {
+                        MovimientosScreen(viewModel = tesoreriaViewModel)
+                    }
+                    composable(Screen.TesoreriaInformes.route) {
+                        TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
+                    }
 
-                // 4. Secretaría y Directiva
-                composable(Screen.DirectivaSecretaria.route) {
-                    DirectivaSecretariaScreen()
-                }
+                    // 6. Directiva
+                    composable(Screen.Directiva.route) {
+                        DirectivaSecretariaScreen()
+                    }
 
-                // 5. Tesorería y sus submódulos (comparten el mismo ViewModel)
-                composable(Screen.Tesoreria.route) {
-                    TesoreriaScreen(onNavigate = { ruta -> navController.navigate(ruta) })
-                }
-                composable(Screen.TesoreriaMovimientos.route) {
-                    MovimientosScreen(viewModel = tesoreriaViewModel)
-                }
-                composable(Screen.TesoreriaInformes.route) {
-                    TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
-                }
-
-                // 6. Directiva
-                composable(Screen.Directiva.route) {
-                    DirectivaSecretariaScreen()
-                }
-
-                // 7. Panel de Administrador
-                composable(Screen.Admin.route) {
-                    AdminScreen()
-                }
-            }
+                    // 7. Panel de Administrador
+                    composable(Screen.Admin.route) {
+                        AdminScreen()
+                    }
+                }   // cierra NavHost
+            }       // cierra CompositionLocalProvider
         }
     }
 }

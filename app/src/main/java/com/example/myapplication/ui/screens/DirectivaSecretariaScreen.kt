@@ -16,11 +16,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.model.EstadoReserva
 import com.example.myapplication.ui.components.ComprobanteImagen
 import com.example.myapplication.ui.components.EstadoBadge
+import com.example.myapplication.ui.components.LocalMensajes
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.viewmodel.ReservaViewModel
 
 @Composable
 fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
+
+    val avisar = LocalMensajes.current
     var soloPendientes by remember { mutableStateOf(true) }
     val lista = if (soloPendientes) viewModel.pendientes else viewModel.reservas
 
@@ -73,6 +76,8 @@ fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "Fecha: ${solicitud.fecha} (${solicitud.horario.texto})")
                         Text(text = "Motivo: ${solicitud.motivo}")
+
+                        // Foto del comprobante (si el vecino ya la subió)
                         solicitud.comprobanteUri?.let {
                             Spacer(modifier = Modifier.height(8.dp))
                             ComprobanteImagen(uri = it)
@@ -86,7 +91,10 @@ fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 OutlinedButton(
-                                    onClick = { viewModel.rechazar(solicitud) },
+                                    onClick = {
+                                        viewModel.rechazar(solicitud)
+                                        avisar("Solicitud de ${solicitud.vecinoNombre} rechazada")
+                                    },
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         contentColor = MaterialTheme.colorScheme.error
                                     )
@@ -96,7 +104,12 @@ fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
                                     Text("Rechazar")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Button(onClick = { viewModel.aprobar(solicitud) }) {
+                                Button(
+                                    onClick = {
+                                        viewModel.aprobar(solicitud)
+                                        avisar("Solicitud de ${solicitud.vecinoNombre} aprobada ✔")
+                                    }
+                                ) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = null)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("Aprobar")

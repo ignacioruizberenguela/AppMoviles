@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,7 @@ import com.example.myapplication.model.Reserva
 import com.example.myapplication.model.Usuario
 import com.example.myapplication.ui.components.ComprobanteImagen
 import com.example.myapplication.ui.components.EstadoBadge
+import com.example.myapplication.ui.components.LocalMensajes
 import com.example.myapplication.ui.viewmodel.ReservaViewModel
 import java.io.File
 
@@ -34,14 +36,14 @@ fun MisReservasScreen(
     viewModel: ReservaViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val avisar = LocalMensajes.current
     val misReservas = if (usuario == null) emptyList() else viewModel.reservasDe(usuario)
 
-    // reserva a la que le estamos sacando foto, y dónde se guardará la foto
+    // Reserva a la que le estamos sacando foto, y dónde se guardará la foto
     var reservaEnFoto by remember { mutableStateOf<Reserva?>(null) }
     var uriPendiente by remember { mutableStateOf<Uri?>(null) }
-    var mensaje by remember { mutableStateOf("") }
 
-    // 1) abre la camara y avisa si se tomo la foto
+    // 1) Abre la cámara; cuando vuelve, avisa si se tomó la foto
     val camaraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { fotoTomada ->
@@ -49,7 +51,7 @@ fun MisReservasScreen(
         val uri = uriPendiente
         if (fotoTomada && reserva != null && uri != null) {
             viewModel.adjuntarComprobante(reserva, uri.toString())
-            mensaje = "Comprobante guardado ✔"
+            avisar("Comprobante guardado ✔")
         }
         reservaEnFoto = null
         uriPendiente = null
@@ -62,14 +64,14 @@ fun MisReservasScreen(
         camaraLauncher.launch(uri)
     }
 
-    // 2) si no tiene permiso de camara, lo pide:
+    // 2) Pide el permiso de cámara (solo si no lo tiene)
     val permisoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { concedido ->
         if (concedido) {
             reservaEnFoto?.let { abrirCamara(it) }
         } else {
-            mensaje = "Sin permiso de cámara no podemos fotografiar el comprobante"
+            avisar("Sin permiso de cámara no podemos fotografiar el comprobante")
             reservaEnFoto = null
         }
     }
@@ -87,69 +89,65 @@ fun MisReservasScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-
-        if (mensaje.isNotEmpty()) {
-            Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+    // ---------- Pantalla ----------
+    if (misReservas.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Aún no tienes reservas")
         }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(misReservas, key = { it.id }) { reserva ->
+                // animateContentSize: la tarjeta crece suavemente cuando aparece la foto
+                Card(modifier = Modifier.fillMaxWidth().animateContentSize()) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${reserva.fecha} · ${reserva.horario.texto}",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            EstadoBadge(reserva.estado)
+                        }
+                        Text(reserva.motivo, style = MaterialTheme.typography.bodySmall)
 
-        if (misReservas.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Aún no tienes reservas")
-            }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(misReservas, key = { it.id }) { reserva ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "${reserva.fecha} · ${reserva.horario.texto}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                EstadoBadge(reserva.estado)
-                            }
-                            Text(reserva.motivo, style = MaterialTheme.typography.bodySmall)
+                        // Foto del comprobante (si ya la tiene)
+                        reserva.comprobanteUri?.let { ComprobanteImagen(uri = it) }
 
-                            // foto de comprobante (si hay)
-                            reserva.comprobanteUri?.let { ComprobanteImagen(uri = it) }
-
-                            when (reserva.estado) {
-                                EstadoReserva.PENDIENTE ->
-                                    TextButton(onClick = { viewModel.cancelar(reserva) }) {
-                                        Text("Cancelar solicitud")
-                                    }
-
-                                EstadoReserva.APROBADA -> {
-                                    Text(
-                                        text = if (reserva.comprobanteUri == null)
-                                            "¡Aprobada! Realiza el pago y fotografía el comprobante."
-                                        else
-                                            "Comprobante enviado. Tesorería confirmará el pago.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    OutlinedButton(onClick = { fotografiar(reserva) }) {
-                                        Icon(Icons.Default.CameraAlt, contentDescription = null)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            if (reserva.comprobanteUri == null) "Fotografiar comprobante"
-                                            else "Volver a tomar foto"
-                                        )
-                                    }
+                        when (reserva.estado) {
+                            EstadoReserva.PENDIENTE ->
+                                TextButton(onClick = {
+                                    viewModel.cancelar(reserva)
+                                    avisar("Solicitud cancelada")
+                                }) {
+                                    Text("Cancelar solicitud")
                                 }
 
-                                else -> {}
+                            EstadoReserva.APROBADA -> {
+                                Text(
+                                    text = if (reserva.comprobanteUri == null)
+                                        "¡Aprobada! Realiza el pago y fotografía el comprobante."
+                                    else
+                                        "Comprobante enviado. Tesorería confirmará el pago.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                OutlinedButton(onClick = { fotografiar(reserva) }) {
+                                    Icon(Icons.Default.CameraAlt, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        if (reserva.comprobanteUri == null) "Fotografiar comprobante"
+                                        else "Volver a tomar foto"
+                                    )
+                                }
                             }
+
+                            else -> {}
                         }
                     }
                 }
@@ -158,7 +156,7 @@ fun MisReservasScreen(
     }
 }
 
-// crear archivo vacio en la carpeta privada de la app y devuelve su URI segura
+// Crea un archivo vacío en la carpeta privada de la app y devuelve su URI segura
 private fun crearUriComprobante(context: Context, reservaId: Int): Uri {
     val carpeta = File(context.filesDir, "comprobantes").apply { mkdirs() }
     val archivo = File(carpeta, "reserva_${reservaId}_${System.currentTimeMillis()}.jpg")

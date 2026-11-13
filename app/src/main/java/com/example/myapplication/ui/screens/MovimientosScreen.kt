@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.model.*
+import com.example.myapplication.ui.components.LocalMensajes
 import com.example.myapplication.ui.components.Selector
 import com.example.myapplication.ui.theme.RojoEgreso
 import com.example.myapplication.ui.theme.VerdeIngreso
@@ -25,6 +26,8 @@ import com.example.myapplication.ui.viewmodel.formatoPesos
 
 @Composable
 fun MovimientosScreen(viewModel: TesoreriaViewModel = viewModel()) {
+
+    val avisar = LocalMensajes.current
     // null = diálogo cerrado · id 0 = nuevo · otro id = editando
     var editando by remember { mutableStateOf<Movimiento?>(null) }
     val lista = viewModel.movimientosFiltrados
@@ -97,7 +100,10 @@ fun MovimientosScreen(viewModel: TesoreriaViewModel = viewModel()) {
                 MovimientoItem(
                     mov = mov,
                     onEditar = { editando = mov },
-                    onEliminar = { viewModel.eliminarMovimiento(mov) }
+                    onEliminar = {
+                        viewModel.eliminarMovimiento(mov)
+                        avisar("Movimiento eliminado")
+                    }
                 )
             }
         }
@@ -111,6 +117,7 @@ fun MovimientosScreen(viewModel: TesoreriaViewModel = viewModel()) {
             onGuardar = {
                 viewModel.guardarMovimiento(it)
                 editando = null
+                avisar("Movimiento guardado ✔")
             },
             onCerrar = { editando = null }
         )
@@ -231,7 +238,6 @@ private fun MovimientoDialog(
                             } ?: "Sin reserva"
                         },
                         onSeleccion = { reservaId = it?.id }
-
                     )
                 }
 

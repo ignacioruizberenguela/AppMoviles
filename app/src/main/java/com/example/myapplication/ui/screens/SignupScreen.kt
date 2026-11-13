@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -90,9 +91,13 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        estado.errorGeneral?.let {
-            Text(text = it, color = MaterialTheme.colorScheme.error)
-            Spacer(modifier = Modifier.height(8.dp))
+        // Aparece y desaparece con animación
+        AnimatedVisibility(visible = estado.errorGeneral != null) {
+            Text(
+                text = estado.errorGeneral ?: "",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
