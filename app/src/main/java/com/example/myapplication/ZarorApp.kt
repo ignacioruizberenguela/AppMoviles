@@ -178,9 +178,9 @@ fun ZarorApp() {
                     TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
                 }
 
-                composable(Screen.Directiva.route) { 
+                composable(Screen.Directiva.route) {
                     DirectivaSecretariaScreen()
-
+                }
                 // 6. Panel de Administrador
                 composable(Screen.Admin.route) {
                     AdminScreen()
@@ -190,3 +190,4 @@ fun ZarorApp() {
         }
     }
 }
+
