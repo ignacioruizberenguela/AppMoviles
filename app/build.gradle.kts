@@ -64,4 +64,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

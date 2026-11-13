@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- folder privada de la app para guardar las fotos de comprobantes -->
+    <files-path name="comprobantes" path="comprobantes/" />
+</paths>

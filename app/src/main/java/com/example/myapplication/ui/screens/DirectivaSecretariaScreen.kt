@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.model.EstadoReserva
+import com.example.myapplication.ui.components.ComprobanteImagen
 import com.example.myapplication.ui.components.EstadoBadge
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.viewmodel.ReservaViewModel
@@ -72,6 +73,10 @@ fun DirectivaSecretariaScreen(viewModel: ReservaViewModel = viewModel()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "Fecha: ${solicitud.fecha} (${solicitud.horario.texto})")
                         Text(text = "Motivo: ${solicitud.motivo}")
+                        solicitud.comprobanteUri?.let {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ComprobanteImagen(uri = it)
+                        }
 
                         // Solo las pendientes se pueden aprobar o rechazar
                         if (solicitud.estado == EstadoReserva.PENDIENTE) {

@@ -1,6 +1,8 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -8,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,19 +18,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.myapplication.data.ZarorRepository
 import com.example.myapplication.ui.navigation.Screen
 import com.example.myapplication.ui.navigation.menuPorRol
-
-import kotlinx.coroutines.launch
-
+import com.example.myapplication.ui.screens.* // no borrar, así se importan todas las screens
 import com.example.myapplication.ui.viewmodel.AuthViewModel
-import com.example.myapplication.ui.screens.* // no borrar, así se improtan todas las screens.
 import com.example.myapplication.ui.viewmodel.TesoreriaViewModel
-
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZarorApp() {
+
+    // Mientras Room y DataStore cargan, mostramos un indicador de carga
+    if (!ZarorRepository.cargado) {
+        PantallaCarga()
+        return
+    }
+
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -39,6 +47,11 @@ fun ZarorApp() {
     // Usuario con sesión iniciada y su rol (null = nadie)
     val usuario = authViewModel.usuarioActual
     val rol = usuario?.rol
+
+    // Si había una sesión guardada, la app parte en la pantalla de inicio de ese rol
+    val pantallaInicial = remember {
+        usuario?.let { menuPorRol(it.rol).first().ruta } ?: Screen.Login.route
+    }
 
     // Ruta actual. Se actualiza sola al navegar.
     val entradaActual by navController.currentBackStackEntryAsState()
@@ -66,7 +79,7 @@ fun ZarorApp() {
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Menú · ${rol?.nombre ?: ""}",
+                    text = "${usuario?.nombre ?: ""} · ${rol?.nombre ?: ""}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -119,7 +132,7 @@ fun ZarorApp() {
             // ---------- NAVHOST / RUTAS ----------
             NavHost(
                 navController = navController,
-                startDestination = Screen.Login.route,
+                startDestination = pantallaInicial,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 // 1. Login
@@ -167,7 +180,7 @@ fun ZarorApp() {
                     DirectivaSecretariaScreen()
                 }
 
-                // 5. Tesorería Principal y sus Submódulos conectados al ViewModel
+                // 5. Tesorería y sus submódulos (comparten el mismo ViewModel)
                 composable(Screen.Tesoreria.route) {
                     TesoreriaScreen(onNavigate = { ruta -> navController.navigate(ruta) })
                 }
@@ -178,16 +191,24 @@ fun ZarorApp() {
                     TesoreriaInformesScreen(viewModel = tesoreriaViewModel)
                 }
 
+                // 6. Directiva
                 composable(Screen.Directiva.route) {
                     DirectivaSecretariaScreen()
                 }
-                // 6. Panel de Administrador
+
+                // 7. Panel de Administrador
                 composable(Screen.Admin.route) {
                     AdminScreen()
                 }
-
             }
         }
     }
 }
 
+// Indicador de carga mientras Room y DataStore leen los datos guardados
+@Composable
+private fun PantallaCarga() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}

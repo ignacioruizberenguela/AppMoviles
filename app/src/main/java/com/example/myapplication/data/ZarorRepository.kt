@@ -12,6 +12,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 // Fuente de datos única de la app.
 // Las listas son lo que ve la UI; Room guarda los datos en el celular.
 // Después: también sincronizará con la API de Spring Boot.
@@ -23,6 +27,15 @@ object ZarorRepository {
     val movimientos = mutableStateListOf<Movimiento>()
 
     private lateinit var db: AppDatabase
+    private lateinit var sesion: SesionDataStore
+
+    // true cuando ya se cargo la data desde Room y DataStore
+    var cargado by mutableStateOf(false)
+        private set
+
+    // Usuario cuya sesión quedó guardada (null = nadie)
+    var usuarioGuardado by mutableStateOf<Usuario?>(null)
+        private set
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)  // trabajo en segundo plano
 
     // ---------- Datos de prueba (solo la primera vez que se abre la app) ----------
@@ -49,6 +62,7 @@ object ZarorRepository {
     fun iniciar(context: Context) {
         if (::db.isInitialized) return   // ya estaba iniciado
         db = AppDatabase.getDatabase(context)
+        sesion = SesionDataStore(context)
 
         scope.launch {
             // Primera vez: la base está vacía → cargamos los datos de prueba
@@ -58,16 +72,21 @@ object ZarorRepository {
                 db.movimientoDao().guardarTodos(movimientosIniciales)
             }
 
-            // se lee la data desde Room...
+            // Leemos desde Room...
             val u = db.usuarioDao().todos()
             val r = db.reservaDao().todas()
             val m = db.movimientoDao().todos()
 
-            // ...y llenamos las listas en el hilo principal (el de la UI)
+            // ...y desde DataStore, quién tenía la sesión abierta
+            val idSesion = sesion.leerUsuarioId()
+
+            // Llenamos en el hilo principal (el de la UI)
             withContext(Dispatchers.Main) {
                 usuarios.clear(); usuarios.addAll(u)
                 reservas.clear(); reservas.addAll(r)
                 movimientos.clear(); movimientos.addAll(m)
+                usuarioGuardado = u.find { it.id == idSesion }
+                cargado = true
             }
         }
     }
@@ -116,6 +135,17 @@ object ZarorRepository {
     fun eliminarMovimiento(id: Int) {
         movimientos.removeAll { it.id == id }
         enSegundoPlano { db.movimientoDao().eliminar(id) }
+    }
+
+    // ---------- SESIÓN (DataStore) ----------
+    fun guardarSesion(usuario: Usuario) {
+        usuarioGuardado = usuario
+        enSegundoPlano { sesion.guardar(usuario.id) }
+    }
+
+    fun borrarSesion() {
+        usuarioGuardado = null
+        enSegundoPlano { sesion.borrar() }
     }
 
     // ---------- Utilidades ----------

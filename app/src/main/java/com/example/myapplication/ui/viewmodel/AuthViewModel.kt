@@ -7,6 +7,15 @@ import androidx.lifecycle.ViewModel
 import com.example.myapplication.data.ZarorRepository
 import com.example.myapplication.model.Rol
 import com.example.myapplication.model.Usuario
+import com.example.myapplication.util.limpiarRut
+import com.example.myapplication.util.validarEmail
+import com.example.myapplication.util.validarNombre
+import com.example.myapplication.util.validarPassword
+import com.example.myapplication.util.validarRut
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class AuthViewModel : ViewModel() {
 
@@ -16,79 +25,141 @@ class AuthViewModel : ViewModel() {
     var usuarioActual by mutableStateOf<Usuario?>(null)
         private set
 
-    // Devuelve null si salió bien, o el mensaje de error
-    fun login(email: String, password: String): String? {
-        if (email.isBlank() || password.isBlank()) return "Ingresa tu mail y contraseña"
+    // Al crear el ViewModel, recupera la sesión guardada en DataStore (si hay)
+    init {
+        usuarioActual = repo.usuarioGuardado
+    }
 
+    // =====================================================
+    // LOGIN
+    // =====================================================
+    // _loginState: privado, solo el ViewModel lo modifica
+    // loginState: público y de solo lectura, la pantalla lo observa
+    private val _loginState = MutableStateFlow(LoginUiState())
+    val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
+
+    fun onLoginEmailChange(valor: String) {
+        _loginState.update {
+            it.copy(email = valor, errorEmail = validarEmail(valor), errorGeneral = null)
+        }
+    }
+
+    fun onLoginPasswordChange(valor: String) {
+        _loginState.update {
+            it.copy(
+                password = valor,
+                errorPassword = if (valor.isBlank()) "Ingresa tu contraseña" else null,
+                errorGeneral = null
+            )
+        }
+    }
+
+    // Devuelve true si inició sesión
+    fun iniciarSesion(): Boolean {
+        val estado = _loginState.value
+        val errorEmail = validarEmail(estado.email)
+        val errorPassword = if (estado.password.isBlank()) "Ingresa tu contraseña" else null
+
+        // 1) Errores de formato → se muestran debajo de cada campo
+        if (errorEmail != null || errorPassword != null) {
+            _loginState.update { it.copy(errorEmail = errorEmail, errorPassword = errorPassword) }
+            return false
+        }
+
+        // 2) Buscar al usuario
         val usuario = repo.usuarios.find {
-            it.email.equals(email.trim(), ignoreCase = true) && it.password == password
-        } ?: return "Mail o contraseña incorrectos"
+            it.email.equals(estado.email.trim(), ignoreCase = true) && it.password == estado.password
+        }
+        if (usuario == null) {
+            _loginState.update { it.copy(errorGeneral = "Mail o contraseña incorrectos") }
+            return false
+        }
 
         usuarioActual = usuario
-        return null
+
+        repo.guardarSesion(usuario)
+
+        _loginState.value = LoginUiState()   // limpia el formulario
+        return true
     }
 
-    fun registrar(nombre: String, rut: String, email: String, password: String): String? {
-        if (nombre.isBlank() || rut.isBlank() || email.isBlank() || password.isBlank()) {
-            return "Completa todos los campos"
-        }
-        if (!rutValido(rut)) return "El RUT no es válido"
-        if (!email.contains("@")) return "El mail no es válido"
-        if (password.length < 4) return "La contraseña debe tener al menos 4 caracteres"
-        if (repo.usuarios.any { it.email.equals(email.trim(), ignoreCase = true) }) {
-            return "Ya existe una cuenta con ese mail"
-        }
-        if (repo.usuarios.any { limpiarRut(it.rut) == limpiarRut(rut) }) {
-            return "Ya existe una cuenta con ese RUT"
+    // =====================================================
+    // REGISTRO
+    // =====================================================
+    private val _registroState = MutableStateFlow(RegistroUiState())
+    val registroState: StateFlow<RegistroUiState> = _registroState.asStateFlow()
+
+    fun onNombreChange(valor: String) {
+        _registroState.update { it.copy(nombre = valor, errorNombre = validarNombre(valor), errorGeneral = null) }
+    }
+
+    fun onRutChange(valor: String) {
+        _registroState.update { it.copy(rut = valor, errorRut = validarRut(valor), errorGeneral = null) }
+    }
+
+    fun onRegistroEmailChange(valor: String) {
+        _registroState.update { it.copy(email = valor, errorEmail = validarEmail(valor), errorGeneral = null) }
+    }
+
+    fun onRegistroPasswordChange(valor: String) {
+        _registroState.update { it.copy(password = valor, errorPassword = validarPassword(valor), errorGeneral = null) }
+    }
+
+    // Devuelve true si se registró
+    fun registrar(): Boolean {
+        val estado = _registroState.value
+
+        // 1) Validar todos los campos (también los que nunca se tocaron)
+        val validado = estado.copy(
+            errorNombre = validarNombre(estado.nombre),
+            errorRut = validarRut(estado.rut),
+            errorEmail = validarEmail(estado.email),
+            errorPassword = validarPassword(estado.password)
+        )
+        if (!validado.sinErrores) {
+            _registroState.value = validado
+            return false
         }
 
-        // el que se registra entra como VECINO; el Admin cambia roles después
+        // 2) Que no exista otra cuenta con el mismo mail o RUT
+        if (repo.usuarios.any { it.email.equals(estado.email.trim(), ignoreCase = true) }) {
+            _registroState.update { it.copy(errorEmail = "Ya existe una cuenta con ese mail") }
+            return false
+        }
+        if (repo.usuarios.any { limpiarRut(it.rut) == limpiarRut(estado.rut) }) {
+            _registroState.update { it.copy(errorRut = "Ya existe una cuenta con ese RUT") }
+            return false
+        }
+
+        // 3) Crear la cuenta: el que se registra entra como VECINO
         repo.guardarUsuario(
             Usuario(
-                nombre = nombre.trim(),
-                rut = rut.trim(),
-                email = email.trim(),
+                nombre = estado.nombre.trim(),
+                rut = estado.rut.trim(),
+                email = estado.email.trim(),
                 rol = Rol.VECINO,
-                password = password
+                password = estado.password
             )
         )
-        usuarioActual = repo.usuarios.find { it.email.equals(email.trim(), ignoreCase = true) }
-        return null
+        usuarioActual = repo.usuarios.find { it.email.equals(estado.email.trim(), ignoreCase = true) }
+        usuarioActual?.let { repo.guardarSesion(it) }
+        _registroState.value = RegistroUiState()
+        return true
     }
 
+    // =====================================================
+    // SESIÓN
+    // =====================================================
     // Modo demo: entra con el primer usuario que tenga ese rol
     fun entrarComoDemo(rol: Rol) {
         usuarioActual = repo.usuarios.firstOrNull { it.rol == rol }
+        usuarioActual?.let { repo.guardarSesion(it) }
     }
 
     fun cerrarSesion() {
+        repo.borrarSesion()
         usuarioActual = null
+        _loginState.value = LoginUiState()
+        _registroState.value = RegistroUiState()
     }
-}
-
-// ---------- Validación de RUT chileno (módulo 11) ----------
-private fun limpiarRut(rut: String): String =
-    rut.replace(".", "").replace("-", "").uppercase()
-
-fun rutValido(rut: String): Boolean {
-    val limpio = limpiarRut(rut)
-    if (limpio.length < 2) return false
-
-    val cuerpo = limpio.dropLast(1)   // los números
-    val dv = limpio.last()            // dígito verificador
-    if (!cuerpo.all { it.isDigit() }) return false
-
-    var suma = 0
-    var multiplicador = 2
-    for (digito in cuerpo.reversed()) {
-        suma += digito.digitToInt() * multiplicador
-        multiplicador = if (multiplicador == 7) 2 else multiplicador + 1
-    }
-
-    val esperado = when (val resto = 11 - (suma % 11)) {
-        11 -> '0'
-        10 -> 'K'
-        else -> resto.digitToChar()
-    }
-    return dv == esperado
 }

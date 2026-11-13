@@ -224,8 +224,14 @@ private fun MovimientoDialog(
                         label = "Reserva",
                         opciones = opciones,
                         seleccionado = opciones.find { it?.id == reservaId },
-                        texto = { r -> r?.let { "#${it.id} ${it.vecinoNombre} (${it.fecha})" } ?: "Sin reserva" },
+                        texto = { r ->
+                            r?.let {
+                                val clip = if (it.comprobanteUri != null) " 📎" else ""
+                                "#${it.id} ${it.vecinoNombre} (${it.fecha})$clip"
+                            } ?: "Sin reserva"
+                        },
                         onSeleccion = { reservaId = it?.id }
+
                     )
                 }
 

@@ -47,6 +47,11 @@ class ReservaViewModel : ViewModel() {
     fun rechazar(reserva: Reserva) = cambiarEstado(reserva, EstadoReserva.RECHAZADA)
     fun cancelar(reserva: Reserva) = cambiarEstado(reserva, EstadoReserva.CANCELADA)
 
+    // adjuntar comprobante
+    fun adjuntarComprobante(reserva: Reserva, uri: String) {
+        repo.guardarReserva(reserva.copy(comprobanteUri = uri))
+    }
+
     private fun cambiarEstado(reserva: Reserva, estado: EstadoReserva) {
         repo.guardarReserva(reserva.copy(estado = estado))
     }
